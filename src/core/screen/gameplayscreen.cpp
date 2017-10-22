@@ -20,6 +20,8 @@ GameplayScreen::~GameplayScreen()
 void GameplayScreen::show()
 {
     playerHealed();
+    Assets::instance->update(m_deltaTime);
+
     //Assets::instance->music->play();
 }
 
@@ -30,6 +32,8 @@ void GameplayScreen::hide()
 
 void GameplayScreen::update(double delta)
 {
+    Assets::instance->update(m_deltaTime);
+
     double t = al_get_time();
     m_deltaTime = t - m_previousTime;
     m_previousTime = t;
@@ -60,6 +64,7 @@ void GameplayScreen::update(double delta)
     }
     else if( m_gameState == GameState::PlayerOk )
     {
+        m_justDied = true;
         if( stepTimer() )
         {
             setNewIllness();
@@ -67,6 +72,11 @@ void GameplayScreen::update(double delta)
     }
     else if( m_gameState == GameState::PlayerDead )
     {
+        if( m_justDied )
+        {
+            Assets::instance->die->play();
+        }
+        m_justDied = false;
         if( Input::IsKeyJustPressed(ALLEGRO_KEY_SPACE) )
         {
             this->resetGame();
@@ -96,14 +106,22 @@ void GameplayScreen::render()
     case GameState::PlayerDead:
         al_draw_bitmap(Assets::instance->notamuerto_bitmap, 0, 0, 0);
         al_draw_text(m_game->m_font, al_map_rgba(255, 0, 0, 255), 2, 20, 0, "space = retry");
+        Assets::instance->notaDead.data.render(14, 24);
         break;
     }
+
 
     if( isIll() )
     {
         float d = 76 * (m_timeToLive / m_currentPassTime);
         al_draw_filled_rectangle(0, 0, d, 1, al_map_rgb(255, 0, 0));
+        Assets::instance->notaSick.data.render(3, 10);
     }
+    else if( m_gameState == GameState::PlayerOk )
+    {
+        Assets::instance->notaBien.data.render(3, 10);
+    }
+
 
     al_draw_text(m_game->m_font, al_map_rgba(0, 0, 0, 255), 2, 0, 0, "Anirameric!");
     al_draw_text(m_game->m_font, al_map_rgba(0, 0, 0, 255), 64, 0, 0, m_scoreString);
@@ -170,5 +188,5 @@ void GameplayScreen::playerHealed()
     m_timeToLive = m_currentPassTime;
     m_score++;
     sprintf(m_scoreString, "%d", m_score);
-
+    Assets::instance->win->play();
 }

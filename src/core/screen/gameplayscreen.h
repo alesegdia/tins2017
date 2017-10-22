@@ -52,6 +52,7 @@ private:
 
     double m_previousTime = 0.f;
     double m_deltaTime;
+    bool m_justDied = false;
 
     Camera camera;
 
